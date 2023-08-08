@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>expense_app</title>
+</head>
+<body>
+    <form action="/expense_details" method="POST">
+        <div class="container1">
+            <label for="amount">Choose expenseamount : </label>
+            <input type="number" id="expenseAmount" name="expenseAmount">
+            <label for="description">Choose description : </label>
+            <input type="text" id="description" name="description">
+            <select id="category" name="category">
+                <option value="electricity" id="eleOpt">electricity</option>
+                <option value="food" id="foodOpt">food</option>
+                <option value="fuel" id="fuelOpt">fuel</option>
+                <option value="movie" id="movieOpt">Movie</option>
+            </select>
+            <button id="addexpense">Add Expenses</button>
+        </div>
+    </form>
+    <div class="container2">
+        <ul id="add_expenses"></ul>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script>
+        const buttn=document.getElementById('addexpense');
+        buttn.addEventListener('click',addData);
+        async function addData(e){
+            e.preventDefault();
+            const expenseAmt=document.getElementById('expenseAmount').value;
+            const descrip=document.getElementById('description').value;
+            const category=document.getElementById('category').value;
+            const obj={
+                "expense_amount":expenseAmt,
+                "description":descrip,
+                "category":category
+            }
+            try{
+                const response=await axios.post('http://localhost:5500/expense_details',obj);
+                
+                const add_expenses=document.getElementById('add_expenses');
+                    const list=document.createElement('li');
+                    const buttn=document.createElement('button');
+                    buttn.textContent='delete';
+                    list.innerHTML=response.data.newExpense.expense_amount+" - "+response.data.newExpense.description+" - "+response.data.newExpense.category+" - ";
+                    list.appendChild(buttn);
+                    add_expenses.appendChild(list);
+                    buttn.addEventListener('click', async () => {
+                        await deletedData(response.data.newExpense.id);
+                        list.remove();
+                    });
+                console.log('data posted successfully');
+            }catch(error){
+                console.log(error);
+            }
+        }
+        async function deletedData(id){
+                try {
+                    const response = await axios.delete(`http://localhost:5500/delete_expense/${id}`);
+                    console.log('Data deleted:', response.data);
+                } catch (error) {
+                    console.log('Error:', error);
+                }
+        }
+        document.addEventListener('DOMContentLoaded',getData);
+        async function getData(){
+            try{
+                const response = await axios.get('http://localhost:5500/get_details')
+                //console.log(response.data.allExpense[0].expense_amount)
+                for(let i=0;i<response.data.allExpense.length;i++){
+                    const add_expenses=document.getElementById('add_expenses');
+                    const list=document.createElement('li');
+                    const buttn=document.createElement('button');
+                    buttn.textContent='delete';
+                    list.innerHTML=response.data.allExpense[i].expense_amount+" - "+response.data.allExpense[i].description+" - "+response.data.allExpense[i].category+" - ";
+                    list.appendChild(buttn);
+                    add_expenses.appendChild(list);
+                    buttn.addEventListener('click',deleteData);
+                    async function deleteData(){
+                        list.remove();
+                        await deletedData(response.data.allExpense[i].id);
+                    }
+
+                }
+            }catch(error){
+                console.log(error);
+            }
+        }
+    </script>
+</body>
+</html>
